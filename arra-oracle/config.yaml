@@ -1,0 +1,98 @@
+name: "Arra Oracle"
+version: "0.1.0"
+slug: "arra_oracle"
+description: >-
+  Docker-first MCP memory + search platform (arra-oracle-v3) as a Home
+  Assistant add-on. Studio UI lives in your sidebar over ingress; MCP and
+  HTTP clients reach the same server on a LAN port. Corpus lives under this
+  add-on's /data, so it rides along in Supervisor's backups.
+url: "https://github.com/Soul-Brews-Studio/arra-oracle-v3-haos/tree/main/arra-oracle"
+
+# Prebuilt, not built on your Home Assistant host — see arra-memory's
+# config.yaml comment for why (90MB bun + 83k LOC compile is not a Pi's job,
+# and a failed on-host build reports as a successful update).
+image: "ghcr.io/soul-brews-studio/{arch}-addon-arra_oracle"
+arch:
+  - amd64
+  - aarch64
+startup: application
+boot: auto
+init: false
+hassio_api: false
+homeassistant_api: false
+host_network: false
+
+# Studio UI in the sidebar.
+ingress: true
+ingress_port: 47778
+panel_icon: mdi:database-search
+panel_title: Oracle
+panel_admin: false
+
+# Ingress cannot serve MCP (no stable URL, HA-session auth only) — same
+# reasoning as arra-memory-haos. A LAN port is required for MCP/HTTP clients.
+# Set to null in the Network tab to close it and keep ingress only.
+ports:
+  47778/tcp: 47778
+ports_description:
+  47778/tcp: "MCP/HTTP endpoint for Claude Code, Codex, and tunnels"
+
+# /data is the only path Supervisor persists and backs up.
+map:
+  - data:rw
+stage: experimental
+
+options:
+  # v3's auth is OFF by default (ARRA_API_KEY=""). An add-on on a LAN port
+  # must refuse to start unauthenticated — run.sh enforces that.
+  owner_api_key: ""
+  # Separate token gate for scripts/MCP clients that read a config file.
+  api_token: ""
+  # v3's default (randomUUID()) invalidates every session on restart,
+  # silently. Made explicit and required here instead.
+  session_secret: ""
+  # Public origin, set ONLY when reached through a tunnel and a remote MCP
+  # client needs absolute URLs. Blank = derive from the incoming request.
+  public_url: ""
+  instance_name: ""
+  # none|ollama|remote — none default, matches keyword-first honesty. Point
+  # at an Ollama box on your LAN/mesh; a HAOS host has no room for models.
+  embedder: "none"
+  embedder_url: ""
+  embedding_model: "bge-m3"
+  # v3 has SEVEN vector adapters; only these two need no external service
+  # HAOS can't run. sqlite-vec/lancedb musl support on the add-on's Alpine
+  # base is the one open risk in this whole packaging — verify on first build.
+  vector_db: "sqlite-vec"
+  vector_fallback: "fts5"
+  file_watcher: false
+  consolidation: false
+  huginn_capture: false
+  log_format: "short"
+  # v3's live bug: no compose sets ARRA_ENV, so every "production" deploy
+  # silently runs the development profile (rate limiting OFF). Pinned in
+  # run.sh regardless of this option's value; exposed so it can be set to
+  # staging/development for debugging without editing run.sh.
+  arra_env: "production"
+  debug: false
+
+schema:
+  owner_api_key: password
+  api_token: password
+  session_secret: password
+  # str, NOT url? — an optional url key defaulting to "" fails Supervisor's
+  # options validation before the container ever starts, and the add-on Log
+  # tab stays empty. Learned the hard way on arra-memory-haos, 2026-08-27.
+  public_url: str
+  instance_name: str
+  embedder: "list(none|ollama|remote)"
+  embedder_url: str
+  embedding_model: str
+  vector_db: "list(sqlite-vec|lancedb)"
+  vector_fallback: "list(fts5|empty|error)"
+  file_watcher: bool
+  consolidation: bool
+  huginn_capture: bool
+  log_format: "list(short|json|nginx)"
+  arra_env: "list(production|staging|development)"
+  debug: bool
