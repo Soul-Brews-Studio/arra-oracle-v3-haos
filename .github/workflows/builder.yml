@@ -25,11 +25,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # aarch64 TEMPORARILY DROPPED during the studio ingress-auth debug
-        # cycle — thor (the only install target right now) is amd64, and
-        # each round-trip was paying for an arch nothing tests against.
-        # Restore aarch64 before treating either add-on as store-ready.
-        arch: [amd64]
+        arch: [amd64, aarch64]
         addon: [arra-oracle, arra-studio]
 
     steps:

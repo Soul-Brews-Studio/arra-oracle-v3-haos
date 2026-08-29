@@ -146,15 +146,12 @@ const server = Bun.serve({
     const url = new URL(req.url);
     const peer = (srv.requestIP(req)?.address ?? '').replace(/^::ffff:/, '');
 
-    // Ingress traffic: identified by the Supervisor proxy's peer address.
-    // X-Ingress-Path is set by Supervisor's own proxy when it strips the
-    // /api/hassio_ingress/<token>/ prefix (docs/addon-authoring.md), so its
-    // presence is corroborating evidence, not proof by itself — a LAN
-    // client could set it on a direct request. Logged unconditionally
-    // until the real peer address is confirmed live on thor; the identity
-    // check tightens once that's known.
-    console.log(`[ingress-probe] peer=${JSON.stringify(peer)} x-ingress-path=${req.headers.get('x-ingress-path')} host=${req.headers.get('host')}`);
-    if (peer === INGRESS_PEER || req.headers.has('x-ingress-path')) {
+    // Ingress traffic: identified by the Supervisor proxy's peer address —
+    // confirmed live on thor (peer="172.30.32.2" on the ingress path,
+    // 2026-08-29). Bun's requestIP() needed the ::ffff: prefix stripped
+    // first; without that this never matched and every ingress visit fell
+    // through to the refusal page.
+    if (peer === INGRESS_PEER) {
       return launcherPage(mintToken());
     }
 
