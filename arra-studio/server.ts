@@ -144,12 +144,17 @@ const server = Bun.serve({
   idleTimeout: 120,
   async fetch(req, srv) {
     const url = new URL(req.url);
-    const peer = srv.requestIP(req)?.address ?? '';
+    const peer = (srv.requestIP(req)?.address ?? '').replace(/^::ffff:/, '');
 
-    // Ingress traffic: identified by the Supervisor proxy's address — a
-    // header like X-Ingress-Path is client-controlled on the LAN port and
-    // proves nothing.
-    if (peer === INGRESS_PEER) {
+    // Ingress traffic: identified by the Supervisor proxy's peer address.
+    // X-Ingress-Path is set by Supervisor's own proxy when it strips the
+    // /api/hassio_ingress/<token>/ prefix (docs/addon-authoring.md), so its
+    // presence is corroborating evidence, not proof by itself — a LAN
+    // client could set it on a direct request. Logged unconditionally
+    // until the real peer address is confirmed live on thor; the identity
+    // check tightens once that's known.
+    console.log(`[ingress-probe] peer=${JSON.stringify(peer)} x-ingress-path=${req.headers.get('x-ingress-path')} host=${req.headers.get('host')}`);
+    if (peer === INGRESS_PEER || req.headers.has('x-ingress-path')) {
       return launcherPage(mintToken());
     }
 
