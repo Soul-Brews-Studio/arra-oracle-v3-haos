@@ -31,6 +31,7 @@ RUN apk add --no-cache libstdc++ unzip curl jq python3 make g++ \
  && unzip -q /tmp/bun.zip -d /tmp \
  && mv "/tmp/${BUN_TARGET}/bun" /usr/local/bin/bun \
  && chmod +x /usr/local/bin/bun \
+ && ln -s bun /usr/local/bin/bunx \
  && rm -rf /tmp/bun.zip "/tmp/${BUN_TARGET}" \
  && bun --version
 
