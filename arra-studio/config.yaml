@@ -1,0 +1,54 @@
+name: "Arra Studio"
+version: "0.1.0"
+slug: "arra_studio"
+description: >-
+  The Oracle Studio UI as its own sidebar add-on, connected to the Arra
+  Oracle backend add-on. Serves the React Studio and proxies its API calls
+  to the backend with the API key injected server-side — the key never
+  reaches a browser. Open it from the sidebar; access from the LAN requires
+  a session minted through Home Assistant first.
+url: "https://github.com/Soul-Brews-Studio/arra-oracle-v3-haos/tree/main/arra-studio"
+
+image: "ghcr.io/soul-brews-studio/{arch}-addon-arra_studio"
+arch:
+  - amd64
+  - aarch64
+startup: application
+boot: auto
+init: false
+hassio_api: false
+homeassistant_api: false
+host_network: false
+
+ingress: true
+ingress_port: 8100
+panel_icon: mdi:telescope
+panel_title: Studio
+panel_admin: false
+
+# Studio's own API-base mechanism is host-only (no path), so it cannot ride
+# an ingress path — the SPA itself must be reached on a plain origin. The
+# sidebar page is a launcher that mints a short-lived session and opens the
+# LAN origin; every request here without that session gets a refusal page.
+ports:
+  8100/tcp: 8100
+ports_description:
+  8100/tcp: "Studio UI (session required — open from the sidebar first)"
+
+map: []
+stage: experimental
+
+options:
+  # Where the Arra Oracle backend add-on listens. The default is the
+  # backend's Supervisor hostname on the internal network, which is stable
+  # for installs of this repository. Point it elsewhere to drive a backend
+  # on another machine.
+  oracle_url: "http://a313c108-arra-oracle:47778"
+  # The backend's owner_api_key. Injected into proxied requests
+  # server-side; never served to the browser.
+  oracle_api_key: ""
+
+schema:
+  # str, NOT url — same Supervisor validation trap as the backend add-on.
+  oracle_url: str
+  oracle_api_key: password

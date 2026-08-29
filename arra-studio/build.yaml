@@ -1,0 +1,11 @@
+# Same base pins as arra-oracle/build.yaml — one repo, one base story.
+build_from:
+  amd64: ghcr.io/home-assistant/amd64-base:3.22
+  aarch64: ghcr.io/home-assistant/aarch64-base:3.22
+
+# No `args:` block — BUILD_ARCH/BUILD_FROM/BUILD_VERSION come from the
+# builder; restating them here overrides real values with literals.
+
+labels:
+  org.opencontainers.image.source: https://github.com/Soul-Brews-Studio/arra-oracle-v3-haos
+  org.opencontainers.image.licenses: BUSL-1.1
