@@ -14,7 +14,10 @@ LABEL \
     io.hass.type="addon" \
     io.hass.arch="${BUILD_ARCH}"
 
-RUN apk add --no-cache libstdc++ unzip curl \
+# python3/make/g++: the frontend's bun install runs the root workspace's
+# install scripts, and better-sqlite3 builds through node-gyp — same
+# toolchain the backend image carries.
+RUN apk add --no-cache libstdc++ unzip curl python3 make g++ \
  && case "${BUILD_ARCH}" in \
       amd64)   BUN_TARGET="bun-linux-x64-musl" ;; \
       aarch64) BUN_TARGET="bun-linux-aarch64-musl" ;; \
