@@ -30,19 +30,25 @@ RUN apk add --no-cache libstdc++ unzip curl \
 
 WORKDIR /app
 
-# The SPA imports the repo root's package.json (SimplePage shows the app
-# version), so the root manifest must sit one level above frontend/. Its
-# workspaces list has to go, though — bun install inside frontend/ walks up,
-# adopts this manifest as the workspace root, and refuses to run without
-# the sibling workspace dirs the slim vendor deliberately lacks.
-COPY vendor/package.json ./package.json
-RUN bun -e "const p = await Bun.file('package.json').json(); delete p.workspaces; await Bun.write('package.json', JSON.stringify(p, null, 2));"
+# The SPA is not self-contained: it imports the repo root's package.json
+# and reaches into backend src/ from 15 files. This mirrors the backend
+# image's frontend build byte-for-byte — the one layout proven to work —
+# then throws away everything but dist/.
+COPY vendor/package.json vendor/bun.lock ./
+COPY vendor/frontend/package.json ./frontend/package.json
+COPY vendor/workers/mcp/package.json ./workers/mcp/package.json
+RUN bun install --production --frozen-lockfile
+COPY vendor/tsconfig.json ./
+COPY vendor/packages ./packages
+COPY vendor/src ./src
 COPY vendor/frontend ./frontend
 RUN cd frontend \
  && bun install \
  && bunx vite build \
  && test -s dist/index.html \
- && rm -rf node_modules src
+ && rm -rf node_modules src \
+ && cd /app \
+ && rm -rf node_modules src packages workers tsconfig.json bun.lock
 
 COPY server.ts ./server.ts
 COPY run.sh /run.sh
