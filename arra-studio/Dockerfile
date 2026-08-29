@@ -31,8 +31,12 @@ RUN apk add --no-cache libstdc++ unzip curl \
 WORKDIR /app
 
 # The SPA imports the repo root's package.json (SimplePage shows the app
-# version), so the root manifest must sit one level above frontend/.
+# version), so the root manifest must sit one level above frontend/. Its
+# workspaces list has to go, though — bun install inside frontend/ walks up,
+# adopts this manifest as the workspace root, and refuses to run without
+# the sibling workspace dirs the slim vendor deliberately lacks.
 COPY vendor/package.json ./package.json
+RUN bun -e "const p = await Bun.file('package.json').json(); delete p.workspaces; await Bun.write('package.json', JSON.stringify(p, null, 2));"
 COPY vendor/frontend ./frontend
 RUN cd frontend \
  && bun install \
