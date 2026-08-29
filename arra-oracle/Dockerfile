@@ -27,7 +27,7 @@ RUN apk add --no-cache libstdc++ unzip curl jq python3 make g++ \
       aarch64) BUN_TARGET="bun-linux-aarch64-musl" ;; \
       *)       echo "unsupported arch: ${BUILD_ARCH}" >&2; exit 1 ;; \
     esac \
- && curl -fsSL "https://github.com/oven-sh/bun/releases/latest/download/${BUN_TARGET}.zip" -o /tmp/bun.zip \
+ && curl -fsSL --retry 4 --retry-delay 2 --retry-all-errors "https://github.com/oven-sh/bun/releases/latest/download/${BUN_TARGET}.zip" -o /tmp/bun.zip \
  && unzip -q /tmp/bun.zip -d /tmp \
  && mv "/tmp/${BUN_TARGET}/bun" /usr/local/bin/bun \
  && chmod +x /usr/local/bin/bun \

@@ -12,7 +12,8 @@ git clone --quiet https://github.com/Soul-Brews-Studio/arra-oracle-v3 vendor
 git -C vendor checkout --quiet "${REF}"
 rm -rf vendor/.git
 
-# Keep only what the Dockerfile copies.
-find vendor -mindepth 1 -maxdepth 1 ! -name frontend -exec rm -rf {} +
+# Keep only what the Dockerfile copies. The root package.json stays: the
+# SPA imports it for the app version.
+find vendor -mindepth 1 -maxdepth 1 ! -name frontend ! -name package.json -exec rm -rf {} +
 
 echo "vendored arra-oracle-v3 frontend @ ${REF}"

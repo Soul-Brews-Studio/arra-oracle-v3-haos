@@ -20,7 +20,7 @@ RUN apk add --no-cache libstdc++ unzip curl \
       aarch64) BUN_TARGET="bun-linux-aarch64-musl" ;; \
       *)       echo "unsupported arch: ${BUILD_ARCH}" >&2; exit 1 ;; \
     esac \
- && curl -fsSL "https://github.com/oven-sh/bun/releases/latest/download/${BUN_TARGET}.zip" -o /tmp/bun.zip \
+ && curl -fsSL --retry 4 --retry-delay 2 --retry-all-errors "https://github.com/oven-sh/bun/releases/latest/download/${BUN_TARGET}.zip" -o /tmp/bun.zip \
  && unzip -q /tmp/bun.zip -d /tmp \
  && mv "/tmp/${BUN_TARGET}/bun" /usr/local/bin/bun \
  && chmod +x /usr/local/bin/bun \
@@ -30,6 +30,9 @@ RUN apk add --no-cache libstdc++ unzip curl \
 
 WORKDIR /app
 
+# The SPA imports the repo root's package.json (SimplePage shows the app
+# version), so the root manifest must sit one level above frontend/.
+COPY vendor/package.json ./package.json
 COPY vendor/frontend ./frontend
 RUN cd frontend \
  && bun install \
