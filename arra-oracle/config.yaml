@@ -1,5 +1,5 @@
 name: "Arra Oracle"
-version: "0.1.0"
+version: "0.1.1"
 slug: "arra_oracle"
 description: >-
   Docker-first MCP memory + search platform (arra-oracle-v3) as a Home
@@ -46,7 +46,9 @@ options:
   # v3's auth is OFF by default (ARRA_API_KEY=""). An add-on on a LAN port
   # must refuse to start unauthenticated — run.sh enforces that.
   owner_api_key: ""
-  # Separate token gate for scripts/MCP clients that read a config file.
+  # Must be blank or EQUAL to owner_api_key — upstream checks both against
+  # the same Bearer header, so a different value locks every client out.
+  # run.sh refuses to start rather than brick /api and /mcp.
   api_token: ""
   # v3's default (randomUUID()) invalidates every session on restart,
   # silently. Made explicit and required here instead.

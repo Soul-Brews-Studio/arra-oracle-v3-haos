@@ -56,8 +56,22 @@ export NODE_ENV=production
 # Studio UI built into the image — upstream containers omit it entirely.
 export ORACLE_FRONTEND_DIST=/app/frontend/dist
 
+# ONE bearer identity, deliberately. Upstream has two auth gates that both
+# read the same Authorization: Bearer header — the global key gate
+# (middleware/auth.ts, ARRA_API_KEY) and the /api token gate
+# (server/api-token-auth.ts, ARRA_API_TOKEN). Set to different values, no
+# request can satisfy both: /api/* and /mcp become unreachable for every
+# client. Found live on thor, 2026-08-29.
+if [ -n "${API_TOKEN}" ] && [ "${API_TOKEN}" != "${OWNER_API_KEY}" ]; then
+    bashio::log.fatal "api_token is set but differs from owner_api_key."
+    bashio::log.fatal "Upstream checks BOTH against the same Bearer header, so"
+    bashio::log.fatal "different values lock every client out of /api and /mcp."
+    bashio::log.fatal "Set api_token equal to owner_api_key, or leave it blank."
+    exit 1
+fi
 export ARRA_API_KEY="${OWNER_API_KEY}"
-export ARRA_API_TOKEN="${API_TOKEN}"
+export ARRA_API_TOKEN="${OWNER_API_KEY}"
+export ORACLE_MCP_HTTP_TOKEN="${OWNER_API_KEY}"
 export ORACLE_SESSION_SECRET="${SESSION_SECRET}"
 export ORACLE_URL="${PUBLIC_URL}"
 export ORACLE_EMBEDDER="${EMBEDDER}"
