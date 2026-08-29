@@ -69,6 +69,19 @@ RUN cd frontend \
  && test -s dist/index.html \
  && rm -rf node_modules
 
+# The SPA's own default API host is the literal string "localhost:47778"
+# (frontend/src/api/oracle.ts), not "wherever this page was loaded from" —
+# so opening Studio at the add-on's real address (a LAN IP, a tunnel
+# hostname, an ingress path) makes it call a DIFFERENT origin than the one
+# serving it, and the backend's CORS allowlist rejects it: "Backend
+# unavailable" on first load, confirmed live via ego-browser 2026-08-29.
+# Baked into the built HTML rather than run.sh: the fix must apply no
+# matter which origin actually serves this page.
+RUN html=/app/frontend/dist/index.html \
+ && bootstrap='<script>try{localStorage.setItem("oracle:host",location.host)}catch(e){}</script>' \
+ && sed -i "s#<head>#<head>${bootstrap}#" "$html" \
+ && grep -q 'oracle:host' "$html"
+
 COPY run.sh /run.sh
 RUN chmod 0755 /run.sh
 

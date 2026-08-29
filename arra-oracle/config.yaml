@@ -1,5 +1,5 @@
 name: "Arra Oracle"
-version: "0.1.1"
+version: "0.1.2"
 slug: "arra_oracle"
 description: >-
   Docker-first MCP memory + search platform (arra-oracle-v3) as a Home
